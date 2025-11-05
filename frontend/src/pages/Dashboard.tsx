@@ -1,9 +1,54 @@
+import { useState, useEffect } from 'react';
 import { Activity, Wind, Zap, AlertCircle } from 'lucide-react';
 import MetricCard from '../components/MetricCard';
 import AIInsightCard from '../components/AIInsightCard';
-import { metrics, aiInsights, incidents } from '../data/mockData';
+import { metrics as defaultMetrics, aiInsights as defaultInsights, incidents as defaultIncidents } from '../data/mockData';
+import apiService from '../services/api';
 
 export default function Dashboard() {
+  const [metrics, setMetrics] = useState(defaultMetrics);
+  const [incidents, setIncidents] = useState(defaultIncidents);
+  const [aiInsights, setAiInsights] = useState(defaultInsights);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        // Fetch KPIs from backend
+        const kpisResponse = await apiService.getDashboardKPIs();
+        if (kpisResponse.data) {
+          // Transform backend KPIs to frontend format
+          const kpiData = kpisResponse.data;
+          setMetrics([
+            { label: 'Traffic Flow', value: kpiData.trafficFlow || '87%', change: kpiData.trafficFlowChange || 5.2, status: 'good' },
+            { label: 'Air Quality Index', value: kpiData.airQuality || '42', change: kpiData.airQualityChange || -8.1, status: 'good' },
+            { label: 'Energy Usage', value: kpiData.energyUsage || '2.4 GW', change: kpiData.energyUsageChange || -3.5, status: 'good' },
+            { label: 'Active Incidents', value: kpiData.activeIncidents || 12, change: kpiData.activeIncidentsChange || 15.3, status: 'warning' },
+          ]);
+        }
+
+        // Fetch dashboard data for incidents
+        const dashboardResponse = await apiService.getDashboardData();
+        if (dashboardResponse.data?.recentIncidents) {
+          setIncidents(dashboardResponse.data.recentIncidents);
+        }
+
+        // Fetch analytics for insights
+        const analyticsResponse = await apiService.getDashboardAnalytics();
+        if (analyticsResponse.data?.insights) {
+          setAiInsights(analyticsResponse.data.insights);
+        }
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+        // Keep using default mock data on error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
   const recentIncidents = incidents.slice(0, 3);
 
   return (

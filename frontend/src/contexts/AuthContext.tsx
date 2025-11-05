@@ -1,46 +1,88 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import apiService from '../services/api';
 
 interface User {
   id: string;
   name: string;
   email: string;
   role: string;
-  avatar: string;
+  avatar?: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   isAuthenticated: boolean;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const mockUser: User = {
-  id: '1',
-  name: 'Admin User',
-  email: 'admin@smartcity.ai',
-  role: 'System Administrator',
-  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Admin'
-};
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(mockUser);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Check for existing token on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        try {
+          const response = await apiService.validateToken();
+          if (response.data?.valid && response.data.user) {
+            setUser(response.data.user);
+          } else {
+            apiService.setToken(null);
+          }
+        } catch (error) {
+          apiService.setToken(null);
+        }
+      }
+      setLoading(false);
+    };
+    checkAuth();
+  }, []);
 
   const login = async (email: string, password: string) => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    if (email && password) {
-      setUser(mockUser);
+    try {
+      const response = await apiService.login(email, password);
+      if (response.data?.token && response.data.user) {
+        const userData = response.data.user;
+        setUser({
+          id: userData.id || userData.userId || '1',
+          name: userData.name || userData.username || email.split('@')[0],
+          email: userData.email || email,
+          role: userData.role || 'User',
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
+        });
+        return { success: true };
+      } else {
+        return { success: false, error: response.error || 'Login failed' };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Login failed',
+      };
     }
   };
 
   const logout = () => {
+    apiService.setToken(null);
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        logout,
+        isAuthenticated: !!user,
+        loading,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

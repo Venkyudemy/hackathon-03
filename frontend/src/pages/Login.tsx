@@ -15,9 +15,12 @@ export default function Login() {
     setLoading(true);
 
     try {
-      await login(email, password);
+      const result = await login(email, password);
+      if (!result.success) {
+        setError(result.error || 'Invalid credentials. Please try again.');
+      }
     } catch (err) {
-      setError('Invalid credentials. Please try again.');
+      setError('An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }

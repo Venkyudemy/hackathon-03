@@ -1,10 +1,43 @@
 import { Camera, Video, AlertCircle, Play, Pause, Maximize2 } from 'lucide-react';
-import { cameraFeeds } from '../data/mockData';
-import { useState } from 'react';
+import { cameraFeeds as defaultCameraFeeds } from '../data/mockData';
+import { useState, useEffect } from 'react';
+import apiService from '../services/api';
 
 export default function CCTVMonitoring() {
-  const [selectedCamera, setSelectedCamera] = useState<string>(cameraFeeds[0].id);
+  const [cameraFeeds, setCameraFeeds] = useState(defaultCameraFeeds);
+  const [selectedCamera, setSelectedCamera] = useState<string>(cameraFeeds[0]?.id || '');
   const [recording, setRecording] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCameras = async () => {
+      try {
+        const response = await apiService.getCameras();
+        if (response.data && Array.isArray(response.data)) {
+          // Transform backend camera data to frontend format
+          const transformedCameras = response.data.map((cam: any) => ({
+            id: cam.id || cam.cameraId,
+            name: cam.name || cam.location,
+            location: cam.location || cam.name,
+            status: cam.status || 'online',
+            streamUrl: cam.streamUrl || cam.url,
+            lastUpdate: cam.lastUpdate || new Date().toISOString(),
+          }));
+          setCameraFeeds(transformedCameras);
+          if (transformedCameras.length > 0) {
+            setSelectedCamera(transformedCameras[0].id);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch cameras:', error);
+        // Keep using default mock data on error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCameras();
+  }, []);
 
   const selectedFeed = cameraFeeds.find(cam => cam.id === selectedCamera);
 
