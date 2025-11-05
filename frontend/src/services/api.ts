@@ -41,46 +41,80 @@ class ApiService {
     }
 
     try {
+      console.log(`[API] ${options.method || 'GET'} ${url}`);
+      
       const response = await fetch(url, {
         ...options,
         headers,
       });
 
+      console.log(`[API] Response status: ${response.status} ${response.statusText}`);
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({
-          message: `HTTP ${response.status}: ${response.statusText}`,
-        }));
+        let errorData: any;
+        try {
+          errorData = await response.json();
+        } catch {
+          errorData = {
+            message: `HTTP ${response.status}: ${response.statusText}`,
+            status: response.status,
+          };
+        }
+        
+        console.error(`[API] Error response:`, errorData);
+        
         return {
-          error: errorData.message || errorData.error || 'Request failed',
+          error: errorData.message || errorData.error || `Request failed with status ${response.status}`,
         };
       }
 
-      const data = await response.json();
-      return { data };
+      // Handle empty responses
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        return { data };
+      } else {
+        // Some endpoints might return empty responses
+        const text = await response.text();
+        if (text) {
+          try {
+            const data = JSON.parse(text);
+            return { data };
+          } catch {
+            return { data: text as any };
+          }
+        }
+        return { data: {} as T };
+      }
     } catch (error) {
+      console.error(`[API] Network error for ${url}:`, error);
       return {
-        error: error instanceof Error ? error.message : 'Network error occurred',
+        error: error instanceof Error ? error.message : 'Network error occurred. Please check if the backend is running.',
       };
     }
   }
 
   // Authentication
   async login(email: string, password: string) {
-    const response = await this.request<{ token: string; user: any }>(
+    const response = await this.request<{ token: string; user: any; accessToken?: string }>(
       '/auth/login',
       {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       }
     );
-    if (response.data?.token) {
-      this.setToken(response.data.token);
+    // Handle different token field names
+    const token = response.data?.token || response.data?.accessToken;
+    if (token) {
+      this.setToken(token);
     }
     return response;
   }
 
   async validateToken() {
-    return this.request<{ valid: boolean; user?: any }>('/auth/validate');
+    return this.request<{ valid: boolean; user?: any }>('/auth/validate', {
+      method: 'POST',
+    });
   }
 
   // Dashboard
