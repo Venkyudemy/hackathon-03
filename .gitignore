@@ -95,7 +95,7 @@ out/
 src/
 index.html
 package.json
-package-lock.json
+# package-lock.json - Keep this for reproducible Docker builds
 vite.config.ts
 tsconfig*.json
 tailwind.config.js
