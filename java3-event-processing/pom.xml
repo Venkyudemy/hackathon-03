@@ -16,7 +16,7 @@
     <artifactId>event-processing-service</artifactId>
     <version>1.0.0</version>
     <name>Event Processing Service</name>
-    <description>Event Processing & Workflow Service</description>
+    <description>Event Processing &amp; Workflow Service</description>
     
     <properties>
         <java.version>17</java.version>

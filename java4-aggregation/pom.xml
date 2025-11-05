@@ -16,7 +16,7 @@
     <artifactId>aggregation-service</artifactId>
     <version>1.0.0</version>
     <name>Aggregation Service</name>
-    <description>Integration & Aggregation Service for dashboards and KPIs</description>
+    <description>Integration &amp; Aggregation Service for dashboards and KPIs</description>
     
     <properties>
         <java.version>17</java.version>

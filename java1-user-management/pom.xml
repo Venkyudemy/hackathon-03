@@ -16,7 +16,7 @@
     <artifactId>user-management-service</artifactId>
     <version>1.0.0</version>
     <name>User Management Service</name>
-    <description>Core API & User Management Service</description>
+    <description>Core API &amp; User Management Service</description>
     
     <properties>
         <java.version>17</java.version>
