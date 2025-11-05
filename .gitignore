@@ -78,18 +78,29 @@ application-prod.yml
 .env
 .env.local
 
-# Node modules (if frontend is in same repo)
-node_modules/
-dist/
-build/
-.npm/
-# Note: package-lock.json should be committed, so it's NOT ignored
+# Frontend files (separate repository)
+# If keeping frontend in same repo, uncomment these:
+# node_modules/
+# dist/
+# build/
+# .npm/
 
 # Frontend build outputs
 .next/
 out/
 .nuxt/
 .vuepress/dist/
+
+# Frontend source files (if separating repos)
+src/
+index.html
+package.json
+package-lock.json
+vite.config.ts
+tsconfig*.json
+tailwind.config.js
+postcss.config.js
+eslint.config.js
 
 # Maven target directories (all services)
 **/target/

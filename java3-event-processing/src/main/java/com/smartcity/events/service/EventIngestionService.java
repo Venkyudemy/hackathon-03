@@ -35,8 +35,14 @@ public class EventIngestionService {
         // Normalize the event
         NormalizedEvent normalizedEvent = normalizationService.normalize(eventDTO);
         
-        // Publish to Kafka
-        kafkaTemplate.send(KAFKA_TOPIC, normalizedEvent.getEventId(), normalizedEvent);
+        // Publish to Kafka (if available)
+        try {
+            kafkaTemplate.send(KAFKA_TOPIC, normalizedEvent.getEventId(), normalizedEvent);
+        } catch (Exception e) {
+            // Kafka not available - log but continue
+            System.err.println("Warning: Could not publish to Kafka: " + e.getMessage());
+            // Event ingestion still succeeds even if Kafka publish fails
+        }
         
         // Trigger Step Functions workflow if it's an incident
         if (isIncidentEvent(normalizedEvent)) {

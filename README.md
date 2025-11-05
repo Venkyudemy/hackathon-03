@@ -1,6 +1,8 @@
-# Smart City Backend Microservices
+# Smart City Backend - Microservices Architecture
 
-A comprehensive Spring Boot microservices architecture for a smart city management system with full validation and exception handling.
+A comprehensive Spring Boot microservices backend for a smart city management system with full validation and exception handling.
+
+> **Note**: This is the **BACKEND** repository. The frontend React application is in the [`frontend/`](./frontend/) folder (or can be in a separate repository).
 
 ## Architecture Overview
 
@@ -34,6 +36,19 @@ The system consists of 4 core microservices and an API Gateway:
    - Service discovery with Eureka
    - CORS configuration
    - Request routing
+
+## 🔗 Frontend Application
+
+The frontend React application is in the [`frontend/`](./frontend/) folder. See `frontend/README.md` for frontend setup instructions.
+
+To run the frontend:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend will connect to the backend API Gateway at `http://localhost:8080/api`.
 
 ## Technology Stack
 
