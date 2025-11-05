@@ -92,7 +92,8 @@ out/
 .vuepress/dist/
 
 # Frontend source files (if separating repos)
-src/
+# Note: We're keeping src/ in the repo, so commenting out the ignore
+# src/
 index.html
 package.json
 # package-lock.json - Keep this for reproducible Docker builds
