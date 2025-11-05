@@ -48,16 +48,27 @@ export default function Dashboard() {
           ]);
         }
 
-        // Fetch dashboard data for incidents
+        // Fetch full dashboard data (includes metrics and incidents)
         const dashboardResponse = await apiService.getDashboardData();
-        if (dashboardResponse.data?.recentIncidents) {
-          setIncidents(dashboardResponse.data.recentIncidents);
+        if (dashboardResponse.data) {
+          // Use metrics from dashboard if available (already formatted)
+          if (dashboardResponse.data.metrics && Array.isArray(dashboardResponse.data.metrics)) {
+            setMetrics(dashboardResponse.data.metrics);
+          }
+          
+          // Use incidents if available
+          if (dashboardResponse.data.recentIncidents && Array.isArray(dashboardResponse.data.recentIncidents)) {
+            setIncidents(dashboardResponse.data.recentIncidents);
+          }
         }
 
         // Fetch analytics for insights
         const analyticsResponse = await apiService.getDashboardAnalytics();
-        if (analyticsResponse.data?.insights) {
-          setAiInsights(analyticsResponse.data.insights);
+        if (analyticsResponse.data) {
+          // Backend returns analyticsData object
+          if (analyticsResponse.data.insights && Array.isArray(analyticsResponse.data.insights)) {
+            setAiInsights(analyticsResponse.data.insights);
+          }
         }
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
