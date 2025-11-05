@@ -18,12 +18,33 @@ export default function Dashboard() {
         const kpisResponse = await apiService.getDashboardKPIs();
         if (kpisResponse.data) {
           // Transform backend KPIs to frontend format
+          // Backend returns: { trafficFlowPercentage, airQualityIndex, energyUsageGW, openIncidents, etc }
           const kpiData = kpisResponse.data;
           setMetrics([
-            { label: 'Traffic Flow', value: kpiData.trafficFlow || '87%', change: kpiData.trafficFlowChange || 5.2, status: 'good' },
-            { label: 'Air Quality Index', value: kpiData.airQuality || '42', change: kpiData.airQualityChange || -8.1, status: 'good' },
-            { label: 'Energy Usage', value: kpiData.energyUsage || '2.4 GW', change: kpiData.energyUsageChange || -3.5, status: 'good' },
-            { label: 'Active Incidents', value: kpiData.activeIncidents || 12, change: kpiData.activeIncidentsChange || 15.3, status: 'warning' },
+            { 
+              label: 'Traffic Flow', 
+              value: kpiData.trafficFlowPercentage ? `${kpiData.trafficFlowPercentage}%` : '87%', 
+              change: 5.2, 
+              status: 'good' 
+            },
+            { 
+              label: 'Air Quality Index', 
+              value: kpiData.airQualityIndex?.toString() || '42', 
+              change: -8.1, 
+              status: 'good' 
+            },
+            { 
+              label: 'Energy Usage', 
+              value: kpiData.energyUsageGW ? `${kpiData.energyUsageGW} GW` : '2.4 GW', 
+              change: -3.5, 
+              status: 'good' 
+            },
+            { 
+              label: 'Active Incidents', 
+              value: kpiData.openIncidents || 12, 
+              change: 15.3, 
+              status: 'warning' 
+            },
           ]);
         }
 
@@ -55,10 +76,7 @@ export default function Dashboard() {
         <div className="text-cyan-400">Loading dashboard data...</div>
       </div>
     );
-  };
-
-    fetchDashboardData();
-  }, []);
+  }
 
   const recentIncidents = incidents.slice(0, 3);
 

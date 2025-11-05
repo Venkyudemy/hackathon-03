@@ -47,14 +47,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       const response = await apiService.login(email, password);
-      if (response.data?.token && response.data.user) {
-        const userData = response.data.user;
+      if (response.data?.token) {
+        // Backend returns: { token, id, email, name, roles, permissions }
+        const userData = response.data;
         setUser({
-          id: userData.id || userData.userId || '1',
-          name: userData.name || userData.username || email.split('@')[0],
+          id: userData.id || '1',
+          name: userData.name || email.split('@')[0],
           email: userData.email || email,
-          role: userData.role || 'User',
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
+          role: userData.roles?.[0] || 'User',
+          avatar: userData.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
         });
         return { success: true };
       } else {

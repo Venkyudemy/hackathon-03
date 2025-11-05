@@ -96,7 +96,16 @@ class ApiService {
 
   // Authentication
   async login(email: string, password: string) {
-    const response = await this.request<{ token: string; user: any; accessToken?: string }>(
+    const response = await this.request<{ 
+      token: string; 
+      id?: string;
+      email?: string;
+      name?: string;
+      roles?: string[];
+      permissions?: string[];
+      avatar?: string;
+      accessToken?: string;
+    }>(
       '/auth/login',
       {
         method: 'POST',
