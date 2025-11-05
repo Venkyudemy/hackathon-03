@@ -55,15 +55,7 @@ export default function Dashboard() {
         <div className="text-cyan-400">Loading dashboard data...</div>
       </div>
     );
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-cyan-400">Loading dashboard data...</div>
-      </div>
-    );
-    };
+  };
 
     fetchDashboardData();
   }, []);
