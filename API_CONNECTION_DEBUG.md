@@ -199,3 +199,4 @@ If issues persist:
 4. Test endpoints directly with curl
 5. Check Eureka dashboard for service registration
 
+

@@ -1,0 +1,36 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: aggregation-service
+
+aws:
+  dynamodb:
+    table-name: smartcity-metrics
+    region: us-east-1
+  timestream:
+    database-name: smartcity-timeseries
+    table-name: events-table
+    region: us-east-1
+
+eureka:
+  instance:
+    hostname: aggregation
+    prefer-ip-address: true
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://eureka-server:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+
+logging:
+  level:
+    com.smartcity: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+

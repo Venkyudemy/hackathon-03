@@ -29,3 +29,4 @@ export const logApiError = (endpoint: string, error: string) => {
   console.error(`[API Error] ${endpoint}:`, error);
 };
 
+

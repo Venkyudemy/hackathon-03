@@ -1,0 +1,74 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: user-management-service
+          uri: lb://user-management-service
+          predicates:
+            - Path=/api/auth/**, /api/users/**, /api/roles/**
+          filters:
+            - StripPrefix=0
+        
+        - id: city-entities-service
+          uri: lb://city-entities-service
+          predicates:
+            - Path=/api/sensors/**, /api/cameras/**, /api/assets/**, /api/vehicles/**
+          filters:
+            - StripPrefix=0
+        
+        - id: event-processing-service
+          uri: lb://event-processing-service
+          predicates:
+            - Path=/api/events/**
+          filters:
+            - StripPrefix=0
+        
+        - id: aggregation-service
+          uri: lb://aggregation-service
+          predicates:
+            - Path=/api/dashboard/**
+          filters:
+            - StripPrefix=0
+      
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: 
+              - "http://localhost:3000"
+              - "http://localhost:5173"
+              - "http://frontend:80"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+
+eureka:
+  instance:
+    hostname: api-gateway
+    prefer-ip-address: true
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://eureka-server:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,gateway
+
