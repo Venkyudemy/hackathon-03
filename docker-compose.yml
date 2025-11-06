@@ -193,7 +193,7 @@ services:
   # AI/Python service (hackproject)
   hackproject:
     build:
-      context: C:/Users/user/Downloads/hackproject/hackproject
+      context: ./hackproject
       dockerfile: Dockerfile
     container_name: smartcity-hackproject
     ports:
