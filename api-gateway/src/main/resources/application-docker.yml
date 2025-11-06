@@ -34,6 +34,14 @@ spring:
             - Path=/api/dashboard/**
           filters:
             - StripPrefix=0
+
+        # AI service (Python FastAPI - hackproject)
+        - id: ai-service
+          uri: http://hackproject:8000
+          predicates:
+            - Path=/ai/**
+          filters:
+            - StripPrefix=0
       
       globalcors:
         corsConfigurations:
