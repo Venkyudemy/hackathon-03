@@ -63,8 +63,15 @@ class ApiService {
         
         console.error(`[API] Error response:`, errorData);
         
+        // Extract error message from various possible response formats
+        const errorMessage = 
+          errorData.message || 
+          errorData.error || 
+          (errorData.validationErrors && Object.values(errorData.validationErrors)[0]) ||
+          `Request failed with status ${response.status}`;
+        
         return {
-          error: errorData.message || errorData.error || `Request failed with status ${response.status}`,
+          error: errorMessage,
         };
       }
 
