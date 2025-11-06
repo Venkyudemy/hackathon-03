@@ -22,9 +22,13 @@ public class AuthController {
     }
     
     @PostMapping("/validate")
-    public ResponseEntity<Boolean> validateToken(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<Boolean> validateToken(@RequestHeader(value = "Authorization", required = false) String authHeader) {
         // Token validation is handled by JwtAuthenticationFilter
-        return ResponseEntity.ok(true);
+        // If we reach here, the token is valid (filter would have rejected invalid tokens)
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.ok(true);
+        }
+        return ResponseEntity.ok(false);
     }
 }
 

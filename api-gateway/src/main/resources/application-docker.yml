@@ -58,8 +58,10 @@ spring:
               - DELETE
               - PATCH
               - OPTIONS
-            allowedHeaders: "*"
+            allowedHeaders: 
+              - "*"
             allowCredentials: true
+            maxAge: 3600
 
 eureka:
   instance:
