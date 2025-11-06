@@ -33,10 +33,20 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
     
     private Collection<? extends GrantedAuthority> getAuthorities(User user) {
-        return user.getRoles().stream()
-                .flatMap(role -> role.getPermissions().stream())
-                .map(permission -> new SimpleGrantedAuthority("ROLE_" + permission.getName()))
+        // Get roles with ROLE_ prefix
+        java.util.List<GrantedAuthority> roleAuthorities = user.getRoles().stream()
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
                 .collect(Collectors.toList());
+        
+        // Optionally add permissions (without ROLE_ prefix for permissions)
+        java.util.List<GrantedAuthority> permissionAuthorities = user.getRoles().stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(permission -> new SimpleGrantedAuthority(permission.getName()))
+                .collect(Collectors.toList());
+        
+        // Combine roles and permissions
+        roleAuthorities.addAll(permissionAuthorities);
+        return roleAuthorities;
     }
 }
 
