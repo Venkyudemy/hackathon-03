@@ -10,14 +10,14 @@ spring:
         - id: user-management-service
           uri: lb://user-management-service
           predicates:
-            - Path=/api/auth/**, /api/users/**, /api/roles/**
+            - Path=/api/auth/**,/api/users/**,/api/roles/**
           filters:
             - StripPrefix=0
         
         - id: city-entities-service
           uri: lb://city-entities-service
           predicates:
-            - Path=/api/sensors/**, /api/cameras/**, /api/assets/**, /api/vehicles/**
+            - Path=/api/sensors/**,/api/cameras/**,/api/assets/**,/api/vehicles/**
           filters:
             - StripPrefix=0
         
