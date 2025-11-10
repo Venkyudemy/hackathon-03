@@ -1,14 +1,54 @@
-import { AlertTriangle, CheckCircle, Clock, Filter, Search, UserCircle } from 'lucide-react';
-import { incidents } from '../data/mockData';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { AlertTriangle, CheckCircle, Clock, Search, UserCircle } from 'lucide-react';
+import { incidents as defaultIncidents } from '../data/mockData';
 import { Incident } from '../types';
+import apiService from '../services/api';
 
 export default function IncidentManagement() {
   const [filter, setFilter] = useState<string>('all');
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [incidentList, setIncidentList] = useState<Incident[]>(defaultIncidents);
+  const [loading, setLoading] = useState(true);
 
-  const filteredIncidents = incidents.filter(incident => {
+  useEffect(() => {
+    const fetchIncidents = async () => {
+      try {
+        const response = await apiService.getDashboardData();
+        const recentIncidents = response.data?.recentIncidents;
+        if (Array.isArray(recentIncidents)) {
+          const transformed: Incident[] = recentIncidents.map((incident: any, index: number) => ({
+            id: incident.id || `INC-${String(index + 1).padStart(3, '0')}`,
+            type: incident.type || 'traffic',
+            severity: incident.severity || 'medium',
+            status: incident.status || 'open',
+            location: incident.location || 'Unknown Location',
+            coordinates: [
+              Number(incident.latitude ?? incident.coordinates?.[0] ?? 0),
+              Number(incident.longitude ?? incident.coordinates?.[1] ?? 0),
+            ],
+            description: incident.description || 'No description provided',
+            timestamp: incident.timestamp || new Date().toISOString(),
+            assignedTo: incident.assignedTo,
+          }));
+
+          setIncidentList(transformed);
+          setSelectedIncident((current) => current ?? transformed[0] ?? null);
+        } else {
+          setSelectedIncident(defaultIncidents[0] ?? null);
+        }
+      } catch (error) {
+        console.error('Failed to fetch incidents:', error);
+        setSelectedIncident(defaultIncidents[0] ?? null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchIncidents();
+  }, []);
+
+  const filteredIncidents = incidentList.filter(incident => {
     const matchesFilter = filter === 'all' || incident.status === filter;
     const matchesSearch = incident.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          incident.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -34,6 +74,14 @@ export default function IncidentManagement() {
     pollution: '🌫️',
     infrastructure: '🏗️'
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-cyan-400">Loading incident data...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -191,19 +239,19 @@ export default function IncidentManagement() {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">Total Incidents</span>
-                <span className="text-2xl font-bold text-white">{incidents.length}</span>
+                <span className="text-2xl font-bold text-white">{incidentList.length}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">Open</span>
-                <span className="text-xl font-bold text-orange-400">{incidents.filter(i => i.status === 'open').length}</span>
+                <span className="text-xl font-bold text-orange-400">{incidentList.filter(i => i.status === 'open').length}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">In Progress</span>
-                <span className="text-xl font-bold text-blue-400">{incidents.filter(i => i.status === 'in-progress').length}</span>
+                <span className="text-xl font-bold text-blue-400">{incidentList.filter(i => i.status === 'in-progress').length}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">Resolved</span>
-                <span className="text-xl font-bold text-green-400">{incidents.filter(i => i.status === 'resolved').length}</span>
+                <span className="text-xl font-bold text-green-400">{incidentList.filter(i => i.status === 'resolved').length}</span>
               </div>
             </div>
           </div>

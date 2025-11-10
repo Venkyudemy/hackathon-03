@@ -1,9 +1,83 @@
-import { MapPin, Camera, AlertTriangle, Wind, Navigation } from 'lucide-react';
-import { mapMarkers } from '../data/mockData';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Camera, AlertTriangle, Wind, Navigation } from 'lucide-react';
+import { mapMarkers as defaultMarkers } from '../data/mockData';
+import { MapMarker } from '../types';
+import apiService from '../services/api';
 
 export default function MapView() {
   const [selectedMarker, setSelectedMarker] = useState<string | null>(null);
+  const [markers, setMarkers] = useState<MapMarker[]>(defaultMarkers);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMapData = async () => {
+      try {
+        const [dashboardResponse, cameraResponse] = await Promise.all([
+          apiService.getDashboardData(),
+          apiService.getCameras(),
+        ]);
+
+        const incidentMarkers: MapMarker[] = Array.isArray(dashboardResponse.data?.recentIncidents)
+          ? dashboardResponse.data.recentIncidents
+              .filter((incident: any) => incident.latitude && incident.longitude)
+              .map((incident: any, index: number) => {
+                const rawType = (incident.type || 'traffic').toLowerCase();
+                const supportedType =
+                  rawType === 'infrastructure'
+                    ? 'traffic'
+                    : (['traffic', 'emergency', 'pollution'] as Array<MapMarker['type']>).includes(
+                        rawType as MapMarker['type']
+                      )
+                    ? (rawType as MapMarker['type'])
+                    : 'traffic';
+
+                return {
+                  id: incident.id || `INC-${String(index + 1).padStart(3, '0')}`,
+                  type: supportedType,
+                  coordinates: [
+                    Number(incident.latitude ?? 0),
+                    Number(incident.longitude ?? 0),
+                  ] as [number, number],
+                  severity: incident.severity || 'medium',
+                  label: incident.location || incident.id || 'Incident',
+                };
+              })
+          : [];
+
+        const cameraMarkers: MapMarker[] = Array.isArray(cameraResponse.data)
+          ? cameraResponse.data
+              .filter((camera: any) => camera.latitude && camera.longitude)
+              .map((camera: any, index: number) => ({
+                id: camera.id || camera.cameraId || `CAM-${String(index + 1).padStart(3, '0')}`,
+                type: 'camera',
+                coordinates: [
+                  Number(camera.latitude ?? 0),
+                  Number(camera.longitude ?? 0),
+                ] as [number, number],
+                label: camera.name || camera.location || 'Camera',
+              }))
+          : [];
+
+        const combinedMarkers = [...incidentMarkers, ...cameraMarkers];
+
+        if (combinedMarkers.length > 0) {
+          setMarkers(combinedMarkers);
+          setSelectedMarker(combinedMarkers[0].id);
+        } else {
+          setMarkers(defaultMarkers);
+          setSelectedMarker(defaultMarkers[0]?.id ?? null);
+        }
+      } catch (error) {
+        console.error('Failed to fetch map data:', error);
+        setMarkers(defaultMarkers);
+        setSelectedMarker(defaultMarkers[0]?.id ?? null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMapData();
+  }, []);
 
   const markerIcons = {
     traffic: <AlertTriangle size={16} className="text-orange-400" />,
@@ -18,6 +92,21 @@ export default function MapView() {
     emergency: 'bg-red-500',
     camera: 'bg-cyan-500'
   };
+
+  const markerShadows: Record<MapMarker['type'], string> = {
+    traffic: 'shadow-orange-500/50',
+    pollution: 'shadow-yellow-500/50',
+    emergency: 'shadow-red-500/50',
+    camera: 'shadow-cyan-500/50',
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-cyan-400">Loading map data...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -44,7 +133,7 @@ export default function MapView() {
             />
             <div className="absolute inset-0 bg-gradient-to-b from-slate-900/50 to-slate-900/80"></div>
 
-            {mapMarkers.map((marker, index) => {
+            {markers.map((marker, index) => {
               const randomTop = 20 + (index * 15) % 60;
               const randomLeft = 15 + (index * 20) % 70;
 
@@ -55,7 +144,7 @@ export default function MapView() {
                   className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
                   onClick={() => setSelectedMarker(marker.id)}
                 >
-                  <div className={`${markerColors[marker.type]} w-8 h-8 rounded-full flex items-center justify-center animate-pulse shadow-lg shadow-${marker.type}-500/50 hover:scale-110 transition-transform`}>
+                  <div className={`${markerColors[marker.type]} w-8 h-8 rounded-full flex items-center justify-center animate-pulse shadow-lg ${markerShadows[marker.type]} hover:scale-110 transition-transform`}>
                     {markerIcons[marker.type]}
                   </div>
                   {selectedMarker === marker.id && (
@@ -98,7 +187,7 @@ export default function MapView() {
           <div className="bg-slate-900/50 backdrop-blur-xl border border-cyan-500/20 rounded-xl p-6">
             <h3 className="text-lg font-semibold text-white mb-4">Active Markers</h3>
             <div className="space-y-3">
-              {mapMarkers.map((marker) => (
+              {markers.map((marker) => (
                 <div
                   key={marker.id}
                   onClick={() => setSelectedMarker(marker.id)}
@@ -125,15 +214,15 @@ export default function MapView() {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-slate-400">Total Markers</span>
-                <span className="text-lg font-bold text-cyan-400">{mapMarkers.length}</span>
+                <span className="text-lg font-bold text-cyan-400">{markers.length}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-slate-400">Cameras</span>
-                <span className="text-lg font-bold text-cyan-400">{mapMarkers.filter(m => m.type === 'camera').length}</span>
+                <span className="text-lg font-bold text-cyan-400">{markers.filter(m => m.type === 'camera').length}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-slate-400">Incidents</span>
-                <span className="text-lg font-bold text-orange-400">{mapMarkers.filter(m => m.type !== 'camera').length}</span>
+                <span className="text-lg font-bold text-orange-400">{markers.filter(m => m.type !== 'camera').length}</span>
               </div>
             </div>
           </div>

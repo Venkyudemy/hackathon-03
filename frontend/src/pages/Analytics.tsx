@@ -1,7 +1,110 @@
+import { useEffect, useState } from 'react';
 import { TrendingUp, Activity, Wind, Zap, AlertTriangle, Download } from 'lucide-react';
-import { analyticsData } from '../data/mockData';
+import { analyticsData as defaultAnalyticsData } from '../data/mockData';
+import apiService from '../services/api';
 
 export default function Analytics() {
+  const [analytics, setAnalytics] = useState(defaultAnalyticsData);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        const response = await apiService.getDashboardAnalytics();
+        if (response.data) {
+          const data = response.data;
+
+          const transformSeries = (
+            series: any,
+            fallback: { labelKey: string; valueKey: string; data: any[] }
+          ) => {
+            if (!Array.isArray(series)) {
+              return fallback.data;
+            }
+            return series
+              .map((item: any) => ({
+                label: item.label ?? item[fallback.labelKey],
+                value:
+                  typeof item.value === 'number'
+                    ? item.value
+                    : Number(item[fallback.valueKey] ?? 0),
+              }))
+              .filter((item: { label: string | undefined }) => !!item.label);
+          };
+
+          const transformed = {
+            trafficFlow: transformSeries(data.trafficFlow, {
+              labelKey: 'hour',
+              valueKey: 'value',
+              data: defaultAnalyticsData.trafficFlow.map((d) => ({
+                label: d.hour,
+                value: d.value,
+              })),
+            }).map((item) => ({
+              hour: item.label,
+              value: item.value,
+            })),
+            energyUsage: transformSeries(data.energyUsage, {
+              labelKey: 'day',
+              valueKey: 'value',
+              data: defaultAnalyticsData.energyUsage.map((d) => ({
+                label: d.day,
+                value: d.value,
+              })),
+            }).map((item) => ({
+              day: item.label,
+              value: item.value,
+            })),
+            airQuality: transformSeries(data.airQuality, {
+              labelKey: 'time',
+              valueKey: 'value',
+              data: defaultAnalyticsData.airQuality.map((d) => ({
+                label: d.time,
+                value: d.value,
+              })),
+            }).map((item) => ({
+              time: item.label,
+              value: item.value,
+            })),
+            incidentsByType: transformSeries(data.incidentsByType, {
+              labelKey: 'type',
+              valueKey: 'count',
+              data: defaultAnalyticsData.incidentsByType.map((d) => ({
+                label: d.type,
+                value: d.count,
+              })),
+            }).map((item) => ({
+              type: item.label,
+              count: Math.round(item.value),
+            })),
+          };
+
+          setAnalytics(transformed);
+        }
+      } catch (error) {
+        console.error('Failed to fetch analytics data:', error);
+        // Keep using default data
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalytics();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-cyan-400">Loading analytics data...</div>
+      </div>
+    );
+  }
+
+  const incidentsTotal = analytics.incidentsByType.reduce(
+    (sum, item) => sum + item.count,
+    0
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -59,7 +162,7 @@ export default function Analytics() {
         <div className="bg-slate-900/50 backdrop-blur-xl border border-cyan-500/20 rounded-xl p-6">
           <h3 className="text-xl font-semibold text-white mb-6">Traffic Flow - 24 Hours</h3>
           <div className="h-64 flex items-end justify-between gap-2">
-            {analyticsData.trafficFlow.map((data, index) => (
+            {analytics.trafficFlow.map((data, index) => (
               <div key={index} className="flex-1 flex flex-col items-center gap-2">
                 <div className="w-full bg-gradient-to-t from-cyan-500 to-blue-500 rounded-t-lg transition-all hover:from-cyan-400 hover:to-blue-400 relative group" style={{ height: `${data.value}%` }}>
                   <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-slate-800 px-2 py-1 rounded text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
@@ -75,7 +178,7 @@ export default function Analytics() {
         <div className="bg-slate-900/50 backdrop-blur-xl border border-cyan-500/20 rounded-xl p-6">
           <h3 className="text-xl font-semibold text-white mb-6">Energy Usage - Weekly</h3>
           <div className="h-64 flex items-end justify-between gap-3">
-            {analyticsData.energyUsage.map((data, index) => (
+            {analytics.energyUsage.map((data, index) => (
               <div key={index} className="flex-1 flex flex-col items-center gap-2">
                 <div className="w-full bg-gradient-to-t from-yellow-500 to-orange-500 rounded-t-lg transition-all hover:from-yellow-400 hover:to-orange-400 relative group" style={{ height: `${(data.value / 3) * 100}%` }}>
                   <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-slate-800 px-2 py-1 rounded text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
@@ -91,7 +194,7 @@ export default function Analytics() {
         <div className="bg-slate-900/50 backdrop-blur-xl border border-cyan-500/20 rounded-xl p-6">
           <h3 className="text-xl font-semibold text-white mb-6">Air Quality Index</h3>
           <div className="space-y-4">
-            {analyticsData.airQuality.map((data, index) => (
+            {analytics.airQuality.map((data, index) => (
               <div key={index}>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-slate-300">{data.time}</span>
@@ -117,11 +220,10 @@ export default function Analytics() {
         <div className="bg-slate-900/50 backdrop-blur-xl border border-cyan-500/20 rounded-xl p-6">
           <h3 className="text-xl font-semibold text-white mb-6">Incidents by Type</h3>
           <div className="space-y-4">
-            {analyticsData.incidentsByType.map((data, index) => {
+            {analytics.incidentsByType.map((data, index) => {
               const colors = ['cyan', 'orange', 'yellow', 'purple'];
               const color = colors[index];
-              const total = analyticsData.incidentsByType.reduce((sum, item) => sum + item.count, 0);
-              const percentage = ((data.count / total) * 100).toFixed(1);
+              const percentage = incidentsTotal ? ((data.count / incidentsTotal) * 100).toFixed(1) : '0.0';
 
               return (
                 <div key={index}>

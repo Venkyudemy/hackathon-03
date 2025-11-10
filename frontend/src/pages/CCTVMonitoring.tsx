@@ -20,7 +20,8 @@ export default function CCTVMonitoring() {
             name: cam.name || cam.location,
             location: cam.location || cam.name,
             status: cam.status || 'online',
-            streamUrl: cam.streamUrl || cam.url,
+            stream: cam.streamUrl || cam.url || cam.stream || '',
+            incidents: cam.incidentCount ?? cam.incidents ?? 0,
             lastUpdate: cam.lastUpdate || new Date().toISOString(),
           }));
           setCameraFeeds(transformedCameras);

@@ -18,6 +18,8 @@ public class IncidentSummaryDTO {
     private String status;
     private String location;
     private String description;
+    private Double latitude;
+    private Double longitude;
     private LocalDateTime timestamp;
     private String assignedTo;
 }

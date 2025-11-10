@@ -50,11 +50,11 @@ public class AnalyticsService {
         analytics.put("airQuality", airQuality);
         
         // Incidents by type
-        Map<String, Integer> incidentsByType = new HashMap<>();
-        incidentsByType.put("Traffic", 145);
-        incidentsByType.put("Emergency", 23);
-        incidentsByType.put("Pollution", 67);
-        incidentsByType.put("Infrastructure", 89);
+        List<DataPointDTO> incidentsByType = new ArrayList<>();
+        incidentsByType.add(DataPointDTO.builder().label("Traffic").value(145.0).build());
+        incidentsByType.add(DataPointDTO.builder().label("Emergency").value(23.0).build());
+        incidentsByType.add(DataPointDTO.builder().label("Pollution").value(67.0).build());
+        incidentsByType.add(DataPointDTO.builder().label("Infrastructure").value(89.0).build());
         analytics.put("incidentsByType", incidentsByType);
         
         return analytics;

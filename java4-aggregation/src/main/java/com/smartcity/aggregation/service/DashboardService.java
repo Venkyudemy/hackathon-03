@@ -66,9 +66,60 @@ public class DashboardService {
     }
     
     private List<IncidentSummaryDTO> getRecentIncidents() {
-        // TODO: Fetch from event service or database
-        // This would typically call the event processing service or query DynamoDB
-        return new ArrayList<>();
+        List<IncidentSummaryDTO> incidents = new ArrayList<>();
+
+        incidents.add(IncidentSummaryDTO.builder()
+                .id("INC-001")
+                .type("traffic")
+                .severity("high")
+                .status("open")
+                .location("Highway 101 North")
+                .description("Heavy congestion detected, estimated 45min delay")
+                .latitude(37.7749)
+                .longitude(-122.4194)
+                .timestamp(LocalDateTime.now().minusMinutes(15))
+                .assignedTo("Traffic Dept.")
+                .build());
+
+        incidents.add(IncidentSummaryDTO.builder()
+                .id("INC-002")
+                .type("emergency")
+                .severity("critical")
+                .status("in-progress")
+                .location("Downtown Plaza")
+                .description("Fire alarm triggered at commercial building")
+                .latitude(37.7849)
+                .longitude(-122.4094)
+                .timestamp(LocalDateTime.now().minusMinutes(5))
+                .assignedTo("Fire Dept.")
+                .build());
+
+        incidents.add(IncidentSummaryDTO.builder()
+                .id("INC-003")
+                .type("pollution")
+                .severity("medium")
+                .status("open")
+                .location("Industrial District")
+                .description("Elevated particulate matter levels detected")
+                .latitude(37.7649)
+                .longitude(-122.4294)
+                .timestamp(LocalDateTime.now().minusHours(2))
+                .build());
+
+        incidents.add(IncidentSummaryDTO.builder()
+                .id("INC-004")
+                .type("infrastructure")
+                .severity("low")
+                .status("resolved")
+                .location("Water Treatment Plant 3")
+                .description("Pump maintenance completed")
+                .latitude(37.7549)
+                .longitude(-122.4394)
+                .timestamp(LocalDateTime.now().minusHours(4))
+                .assignedTo("Utilities")
+                .build());
+
+        return incidents;
     }
 }
 
